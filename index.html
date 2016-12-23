@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html ng-app="lolDmgApp">
+<head>
+  <title> Dmg Calculation</title>
+
+  <link rel="stylesheet" href="/lib/css/bootstrap.min.css">
+  <link rel="stylesheet" href="lib/css/ngDialog.min.css">
+  <link rel="stylesheet" href="lib/css/ngDialog-theme-default.min.css">
+
+  <link rel="stylesheet" type="text/css" href="/css/style.css">
+
+  <script src="/lib/js/angular.min.js"></script>
+  <script src="/lib/js/angular-resource.min.js"></script>
+  <script src="/lib/js/angular-route.min.js"></script>
+  <script src="/lib/js/angular-sanitize.min.js"></script>
+  <script src="/scripts/app.js"></script>
+  <script src="/scripts/directives/match.js"></script>
+  <script src="/scripts/directives/home.js"></script>
+  <script src="/scripts/directives/dmgSimulation.js"></script>
+  <script src="/scripts/services/dmgSimulationService.js"></script>
+
+  <script src="lib/js/ngDialog.min.js"></script>
+  <script src="lib/js/toArrayFilter.js"></script>
+  
+  <script src="/scripts/controller/SummonerController.js"></script>
+  <script src="/scripts/controller/MatchController.js"></script>
+  <script src="/scripts/controller/DamageSimulationController.js"></script>
+
+</head>
+
+<body>
+  <div class="container">
+      <h1>Dmg Calculation and Itemization</h1>
+      <nav class="navbar navbar-default">
+        <div class="navbar-inner">
+          <ul class="nav navbar-nav navbar-left">
+            <li><a href="/">Home</a></li>
+            <li><a href="/dmgSimulation">Dmg Simulation</a></li>
+          </ul>
+        </div>
+      </nav>
+
+      <ng-view></ng-view>
+  </div>
+
+</body>
+
+</html>

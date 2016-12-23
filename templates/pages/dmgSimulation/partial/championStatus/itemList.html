@@ -1,0 +1,39 @@
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <div class="row">
+      <div class="col-md-3">
+        <div class="panel-title">
+          <h2 class="no-margin">Item List</h2>
+       </div>
+     </div>
+     <div class="col-md-9">
+        <input type="text" ng-model="search_item.name" class="form-control" id="searchItem" placeholder="Enter Item Name to Search">
+     </div>
+    </div>  
+  </div>
+ 
+  <div class="panel-body no-padding row-eq-height">
+      <div class="col-md-2 item-category well no-padding">
+        <div class="list-group">
+          <button class="list-group-item btn btn-default no-padding" ng-click="changeDisplayItems('')">
+            All Items
+          </button>
+          <item-category ng-repeat="tree in items.tree" tree="tree" ng-if="!$last"></item-category>
+        </div>
+
+        <h5 class="no-margin">Champion Items</h5>
+        <item ng-repeat="index in [0,1,2,3,4,5]"></item>
+        <button class="btn btn-default" ng-click="sellItem(selectedItemIndex, currentchampion.items[selectedItemIndex])">Sell</button>
+
+      </div>
+
+      <div class="col-md-5 item-detail-list no-padding well">
+        <item-display ng-repeat="item in items.data | toArray | orderBy: 'gold.total' | filter:category | filter:search_item" item="item" ></item-display>
+      </div>
+
+      <div class="col-md-5 item-description no-padding well">
+        <item-detail currentitem="currentitem"></item-detail>
+      </div>
+
+    </div>
+</div>

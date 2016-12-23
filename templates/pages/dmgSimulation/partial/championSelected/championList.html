@@ -1,0 +1,20 @@
+<div class="panel panel-info">
+  <div class="panel-heading">
+    <div class="row">
+      <div class="col-md-8">
+        <div class="panel-title">
+          <h2 class="no-margin">List of Champions</h2>
+          </div>
+      </div>
+      <div class="col-md-4">
+        <input type="text" ng-model="search_champion_name.name" class="form-control" id="searchChampion" placeholder="Search">
+      </div>
+    </div>
+  </div>
+  <div class="panel-body">
+    <div class="col-md-12">
+      <champion-display ng-repeat="champion in champions | toArray | orderBy: 'name' | filter:search_champion_name" champion="champion"></champion-display>
+    </div>
+  </div>
+
+</div>

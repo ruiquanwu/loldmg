@@ -1,0 +1,16 @@
+<div class="col-md-6 col-md-offset-3 no-padding mt-10">
+  <img class="championThumbnail center-block" ng-src="{{currentchampion.thumbnail || '/images/stats_icons/notselected.png'}}">
+</div>
+<div class="col-md-12">
+  <p class="text-center mb-5">{{currentchampion.name || 'Not Selected'}}</p>
+</div>
+
+<div class="input-group">
+  <span class="input-group-btn">
+    <button ng-click="DisplayChampion()" class="btn btn-default btn-block" type="button">Select</button>
+  </span>
+</div>
+
+<div class="col-md-12 no-padding">
+  <img class="thumbnail img-responsive" ng-src="{{currentchampion.loadingImage || 'https://dummyimage.com/160x240/000/fff'}}">
+</div>

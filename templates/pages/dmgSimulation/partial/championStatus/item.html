@@ -1,0 +1,5 @@
+<div class="col-md-4 item no-padding" >
+  <img class="center-block itemThumbnail thumbnail no-margin-bot img-responsive" ng-if="currentchampion.items[index].image" ng-class="{'item-selected':selectedItemIndex === index}" ng-src="{{baseItemImageUrl + currentchampion.items[index].image.full}}" ng-click="selectChampionItem(index, currentchampion.items[index])">
+
+  <img class="center-block itemThumbnail thumbnail no-margin-bot img-responsive" ng-if="!currentchampion.items[index].image" src ="https://dummyimage.com/50x50/000/fff">
+</div>

@@ -1,0 +1,25 @@
+<h1>hello</h1>
+<div class="row-eq-height damage-simulation" ng-controller="DamageSimulationController">
+  <div class="col-md-5 my-champion" ng-controller="CurrentChampionController">
+    <div class="col-md-6 no-padding">
+      <champion-status champions="champions" items="items" currentchampion="currentchampion"></champion-status>
+   </div>
+
+    <div class="col-md-6 well">
+      <champion-selected champions="champions" currentchampion="currentchampion"></champion-selected>
+    </div>
+  </div>
+
+  <div class="col-md-2 well">
+    <damage-panel></damage-panel>
+  </div>
+  
+  <div class="col-md-5 emeny-champion" ng-controller="CurrentChampionController">
+    <div class="col-md-6 well">
+      <champion-selected champions="champions" currentchampion="currentchampion"></champion-selected>
+    </div>
+    <div class="col-md-6 no-padding">
+      <champion-status champions="champions" items="items" currentchampion="currentchampion"></champion-status>
+    </div>
+  </div>
+</div>

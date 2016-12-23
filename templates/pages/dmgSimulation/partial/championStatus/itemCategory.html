@@ -1,0 +1,4 @@
+<p class="list-group-item no-padding text-primary">{{tree.header}}</p>
+<button ng-repeat="tag in tree.tags" ng-if="$index > 0" class="list-group-item btn btn-sm no-padding" ng-click="changeDisplayItems(tag)">
+  {{tag}}
+</button>

@@ -1,0 +1,10 @@
+<div class="col-md-2 no-padding" ng-show="summonerRiftItem(item)">
+  <a href="#" item-id="{{item.id}}" ng-click="showItemDetail(item)" ng-dblclick="buyItem(item)">
+    <div class="itemThumbnail">
+    <img class="itemThumbnail thumbnail no-margin" ng-src="{{baseItemImageUrl+item.image.full}}">
+    <p class="text-center">
+      {{item.gold.total}}
+    </p>
+    </div>
+  </a>
+</div>

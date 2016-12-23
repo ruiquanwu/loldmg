@@ -1,0 +1,12 @@
+<div class="col-md-12 no-padding well">
+<ul class="nav nav-tabs">
+  <li role="presentation" ng-class="{active: view == 1}"><a href="#" ng-click="selectView(1)">Item</a></li>
+  <li role="presentation" ng-class="{active: view == 2}"><a href="#" ng-click="selectView(2)">Rune</a></li>
+  <li role="presentation" ng-class="{active: view == 3}"><a href="#" ng-click="selectView(3)">Mastery</a></li>
+</ul>
+
+<item-set ng-show="view == 1"></item-set>
+<runes ng-show="view == 2"></runes>
+<masteries ng-show="view == 3"></masteries>
+
+</div>

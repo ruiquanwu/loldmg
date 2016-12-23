@@ -1,0 +1,24 @@
+<div class="item-details" ng-if="currentitem.image">
+  <build-into-items></build-into-items>
+
+  <build-from-items></build-from-items>
+  <div class="media">
+    <div class="media-left">
+      <img class="itemThumbnail thumbnail media-object" ng-src="{{baseItemImageUrl+currentitem.image.full}}">
+    </div>
+
+    <div class="media-body">
+      <div class="col-md-10 no-padding">
+        <p class="media-heading text-info">{{currentitem.name}}</p>
+        {{currentitem.gold.total}}
+      </div>
+      <div class="col-md-2 no-padding">
+          <button class="btn btn-primary float-right" ng-click="buyItem(currentitem)">Buy</button>
+          <p class="text-danger">{{buyitemerror}}</p>
+      </div>
+    </div>
+  </div>
+
+  <div ng-bind-html="currentitem.description"></div>
+
+</div>

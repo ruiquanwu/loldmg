@@ -1,0 +1,6 @@
+<div class="build-into-items">
+  <h4 class="no-margin">Build into:</h4>
+    <div class="overflow-x-scoll">
+      <img ng-if="items.data[builditem]" ng-repeat="builditem in currentitem.into" class="itemThumbnail thumbnail horizontal-inline no-margin" ng-src="{{baseItemImageUrl+builditem + '.png'}}" ng-click="showItemDetailWithID(builditem)">
+    </div>
+</div>

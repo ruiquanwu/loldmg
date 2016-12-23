@@ -1,0 +1,25 @@
+<div class="champion-level-pannel">
+  <h4>CurrentLevel: {{currentchampion.level || "1"}}</h4>
+
+  <div class="col-md-3 no-padding">
+    <button class="btn btn-default" ng-click="resetLevel()">
+      <i class="glyphicon glyphicon-fast-backward"></i>
+    </button>
+  </div>
+  <div class="col-md-3 no-padding">
+    <button class="btn btn-default" ng-click="downLevel()">
+      <i class="glyphicon glyphicon-minus"></i>
+    </button>
+  </div>
+  <div class="col-md-3 no-padding">
+    <button class="btn btn-default" ng-click="upLevel()">
+      <i class="glyphicon glyphicon-plus"></i>
+    </button>
+  </div>
+  <div class="col-md-3 no-padding">
+    <button class="btn btn-default" ng-click="maxLevel()">
+      <i class="glyphicon glyphicon-fast-forward"></i>
+    </button>
+  </div>    
+
+</div>

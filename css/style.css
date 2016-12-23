@@ -1,0 +1,56 @@
+.no-padding {
+  padding: 0;
+}
+
+.no-margin {
+  margin: 0;
+}
+
+.mb-5 {
+  margin-bottom: 5px;
+}
+
+.mt-10 {
+  margin-top: 10px;
+}
+
+.no-margin-bot {
+  margin-bottom: 0;
+}
+
+.row-eq-height{
+  height: 100%;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+}
+
+.championThumbnail {
+  width: 80px;
+}
+
+.itemThumbnail {
+  width: 50px;
+}
+
+.panel-scoll {
+   overflow-y: scroll;
+}
+
+.overflow-x-scoll {
+  white-space: nowrap;
+  overflow-x: scroll;
+}
+
+.horizontal-inline {
+  display: inline-block;
+}
+
+.float-right {
+  float: right;
+}
+
+.item-selected {
+  border: 2px solid blue;
+}
