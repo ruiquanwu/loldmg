@@ -7,4 +7,10 @@
     <button class="btn btn-primary btn-block" ng-click="getItemList()">Buy
     </button>
   </div>
+  <div class="col-md-12">
+  	<p ng-repeat="currentchampionitem in currentchampion.items track by $index">
+  		{{currentchampionitem.stats}}
+  	</p>
+
+  </div>
 </div>

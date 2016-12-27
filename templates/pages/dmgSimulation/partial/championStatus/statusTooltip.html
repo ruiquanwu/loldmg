@@ -1,0 +1,12 @@
+<div ng-if="mouseoverStat.name">
+	<h4 class="text-left">{{mouseoverStat.name}}</h4>
+
+	<p class="text-left">
+		Current {{mouseoverStat.name}}: {{mouseoverStat.content}} ({{mouseoverStat.base || 0}} + 
+		<span class="text-success">{{mouseoverStat.bouns || 0}}</span>)
+	</p>
+</div>
+
+<div ng-if="!mouseoverStat.name">
+	<p>Unavailable</p>
+</div>

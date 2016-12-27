@@ -1,4 +1,4 @@
-var lolDmgApp = angular.module('lolDmgApp', ['ngResource', 'ngRoute', 'ngDialog', 'angular-toArrayFilter', 'ngSanitize'])
+var lolDmgApp = angular.module('lolDmgApp', ['ngResource', 'ngRoute', 'ngDialog', 'angular-toArrayFilter', 'ngSanitize', 'ui.bootstrap'])
   .config(function($routeProvider, $locationProvider){
     $routeProvider
       .when('/', {

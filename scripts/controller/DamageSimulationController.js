@@ -20,37 +20,51 @@ lolDmgApp.controller('ChampionStatusController', function($scope){
   $scope.currentchampion.displaystats1 = [{}, {}, {}, {}, {}, {}, {}, {}];
   $scope.currentchampion.displaystats2 = [{}, {}, {}, {}, {}, {}, {}, {}];
   $scope.currentchampion.items = [{}, {}, {}, {}, {}, {}];
+  $scope.mouseoverStat = {};
+  $scope.currenitemstats = {};
 
   $scope.DisplayStatus = function() {
     console.log($scope.champions);
     console.log($scope.currentchampion);
     //console.log($scope.champions[$scope.currentchampion.key].stats);
   };
+
+  // show stat detail in tooltip when mouseover stat
+  $scope.mouseoverStatDetail = function(stat) {
+    //console.log(stat);
+    $scope.mouseoverStat = stat;
+  };
 });
 
-lolDmgApp.controller('ChampionCollectionController', function($scope, $filter, RiotApi, ngDialog) {
+lolDmgApp.controller('ChampionCollectionController', function($scope, $filter, $sce, RiotApi, ngDialog) {
   $scope.category = "";
   $scope.currentitem = {};
   $scope.view = "1";
   $scope.buildfromitemtree = [];
   $scope.selectedItemIndex = "";
   $scope.baseItemImageUrl = "https://ddragon.leagueoflegends.com/cdn/6.24.1/img/item/"
+  // switch view for Item/Rune/Mastery
   $scope.selectView = function(viewValue) {
     $scope.view = viewValue;
     //console.log($scope.view);
   };
 
+  // Show item details in display Item List Page
   $scope.showItemDetail = function (item) {
-    $scope.buildfromitemtree = getBuildFromItems(item, $scope.items);
-    $scope.currentitem = item;
+    if($scope.currentitem !== item) {
+      $scope.buildfromitemtree = getBuildFromItems(item, $scope.items);
+      $scope.currentitem = item;
     //console.log(item);
+    }
   };
 
   //change current item with selected item from "Build into panel"
   $scope.showItemDetailWithID = function(item_id) {
     //console.log($scope.items.data[item_id]);
-    $scope.currentitem = $scope.items.data[item_id];
-    $scope.buildfromitemtree = getBuildFromItems($scope.currentitem, $scope.items);
+    if($scope.currentitem.id !== item_id) {
+      $scope.currentitem = $scope.items.data[item_id];
+      $scope.buildfromitemtree = getBuildFromItems($scope.currentitem, $scope.items);
+    }
   };
 
   // buy item from Items List
@@ -65,6 +79,14 @@ lolDmgApp.controller('ChampionCollectionController', function($scope, $filter, R
     }
     if (itemAdded === false)
       $scope.buyitemerror = "Items are full";
+    console.log($scope.currentchampion);
+
+    // initialize item stats to empty array
+    console.log("initialize");
+    console.log($scope.currenitemstats);
+    $scope.currenitemstats = {};
+    console.log($scope.currenitemstats);
+    getCurrentItemStats($scope.currentchampion.items, $scope.currentchampion.displaystats1.concat($scope.currentchampion.displaystats2));
   };
 
   // select item from champion itemset.
@@ -74,6 +96,12 @@ lolDmgApp.controller('ChampionCollectionController', function($scope, $filter, R
     $scope.buildfromitemtree = getBuildFromItems($scope.currentitem, $scope.items);
     console.log(item);
   };
+
+  // show item popup info when mouseover
+  $scope.setCurrentMouseoverItem = function(item) {
+    $scope.currentmouseoveritem = item;
+  };
+
 
   // sell an item
   $scope.sellItem = function(item_index, item) {
@@ -139,7 +167,55 @@ lolDmgApp.controller('ChampionCollectionController', function($scope, $filter, R
     //console.log(itemStructure);
     //console.log($scope.currentitem.buildFromItems);
     return itemStructure;
-  }
+  };
+
+  getCurrentItemStats = function(items, championstats) {
+
+    console.log(championstats);
+    var itemCapacity = 6;
+    // loop through current items to get the stats array
+    for(var i = 0; i < itemCapacity; i++) {
+      var itemstats = items[i].stats;
+      if(itemstats) {
+        // loop through each stats to update champion stats bonus
+        angular.forEach(itemstats, function(value, key) {
+          var statName;
+          console.log(key + ":" + value);
+          // if stat contain "Flat", add the value to the stats bonus
+          if(key.indexOf("Flat") !== -1) {
+            // get the name of stat from key, key will have the format of Flat{statname}Mod
+            statName = key.substring(key.indexOf("Flat") + ("Flat").length, key.length - 3);
+            if($scope.currenitemstats[statName])
+              $scope.currenitemstats[statName] += value;
+            else
+              $scope.currenitemstats[statName] = value;
+          }
+
+          if(key.indexOf("Percent") !== -1) {
+            // get the name of stat from key, key will have the format of Percent{statname}Mod
+            statName = key.substring(key.indexOf("Percent") + ("Percent").length, key.length - 3);
+            // get champion stat using bonus statName
+            var championstat = $filter("filter")(championstats, {bonusStat: statName})[0];
+            console.log(championstat);
+            if($scope.currenitemstats[statName]) {
+              //console.log();
+              $scope.currenitemstats[statName] += championstat.base * value;
+            }
+            else {
+              console.log(championstat.base);
+              console.log(value);
+              console.log(championstat.base * value);
+              $scope.currenitemstats[statName] = championstat.base * value;
+
+            }
+          }
+        });
+      }
+    }
+
+    console.log($scope.currenitemstats);
+  };
+
 
   // change display item base on item's category
   $scope.changeDisplayItems = function(category) {
@@ -218,9 +294,9 @@ lolDmgApp.controller('ChampionSelectedController', function($scope, ngDialog, Ri
       //calculate new stats base on formula  
       //newStatistic = b + g * (n - 1) * (0.685 + 0.0175 * n)
       //where b is base, g is growth, n is current level
-      newstat = base + growth * (level - 1) * (0.685 + 0.0175 * level);
+      stats[i].base = (base + growth * (level - 1) * (0.685 + 0.0175 * level)).toFixed(3);
      //   console.log(newstat);
-      stats[i].content = newstat.toFixed(3);
+      stats[i].content = stats[i].base + stats[i].bonus;
       }
     }
   };
@@ -274,28 +350,28 @@ lolDmgApp.controller('ChampionListController', function($scope) {
     $scope.closeThisDialog("closing champion selection");
   };
 
-  // private function to get current champion stats
+  // private function to initialize current champion stats
   function formattedCurrentChampionStats(stats) {
     var statsiconlocation = "/images/stats_icons/";
     $scope.currentchampion.displaystats1 = [];
-    $scope.currentchampion.displaystats1.push({name: "hpregen", content: stats.hpregen, icon: statsiconlocation + "hpregen.png"});
-    $scope.currentchampion.displaystats1.push({name: "mpregen", content: stats.mpregen, icon: statsiconlocation + "mpregen.png"});
-    $scope.currentchampion.displaystats1.push({name: "armorpen", content: "0 | 0%", icon: statsiconlocation + "armorpen.png"});
-    $scope.currentchampion.displaystats1.push({name: "magicpen", content: "0 | 0%", icon: statsiconlocation + "magicpen.png"});
-    $scope.currentchampion.displaystats1.push({name: "lifesteal", content: "0", icon: statsiconlocation + "lifesteal.png"});
-    $scope.currentchampion.displaystats1.push({name: "spellsteal", content: "0", icon: statsiconlocation + "spellsteal.png"});
-    $scope.currentchampion.displaystats1.push({name: "attackrange", content: stats.attackrange, icon: statsiconlocation + "attackrange.png"});
-    $scope.currentchampion.displaystats1.push({name: "tenacity", content: "0", icon: statsiconlocation + "tenacity.png"});
+    $scope.currentchampion.displaystats1.push({name: "hpregen", content: stats.hpregen, icon: statsiconlocation + "hpregen.png", base: stats.hpregen, bonus: 0, bonusStat: "HPRegen"});
+    $scope.currentchampion.displaystats1.push({name: "mpregen", content: stats.mpregen, icon: statsiconlocation + "mpregen.png", base: stats.mpregen, bonus: 0, bonusStat: "MPRegen"});
+    $scope.currentchampion.displaystats1.push({name: "armorpen", content: "0 | 0%", icon: statsiconlocation + "armorpen.png", bonus: 0, bonusStat: "ArmorPenetration"});
+    $scope.currentchampion.displaystats1.push({name: "magicpen", content: "0 | 0%", icon: statsiconlocation + "magicpen.png", bonus: 0, bonusStat: "MagicPenetration"});
+    $scope.currentchampion.displaystats1.push({name: "lifesteal", content: "0", icon: statsiconlocation + "lifesteal.png", bonus: 0, bonusStat: "LifeSteal"});
+    $scope.currentchampion.displaystats1.push({name: "spellsteal", content: "0", icon: statsiconlocation + "spellsteal.png", bonus: 0, bonusStat: "SepllVamp"});
+    $scope.currentchampion.displaystats1.push({name: "attackrange", content: stats.attackrange, icon: statsiconlocation + "attackrange.png", base: stats.attackrange, bonus: 0});
+    $scope.currentchampion.displaystats1.push({name: "tenacity", content: "0", icon: statsiconlocation + "tenacity.png", bonus: 0});
 
     $scope.currentchampion.displaystats2 = [];
-    $scope.currentchampion.displaystats2.push({name: "attackdamage", content: stats.attackdamage, icon: statsiconlocation + "attackdamage.png"});
-    $scope.currentchampion.displaystats2.push({name: "spelldamage", content: "0", icon: statsiconlocation + "spelldamage.png"});
-    $scope.currentchampion.displaystats2.push({name: "armor", content: stats.armor, icon: statsiconlocation + "armor.png"});
-    $scope.currentchampion.displaystats2.push({name: "spellblock", content: stats.spellblock, icon: statsiconlocation + "spellblock.png"});
-    $scope.currentchampion.displaystats2.push({name: "attackspeed", content: (0.625/(1+stats.attackspeedoffset)).toFixed(3), icon: statsiconlocation + "attackspeed.png"});
-    $scope.currentchampion.displaystats2.push({name: "cooldown", content: 0, icon: statsiconlocation + "cooldown.png"});
-    $scope.currentchampion.displaystats2.push({name: "crit", content: stats.crit, icon: statsiconlocation + "crit.png"});
-    $scope.currentchampion.displaystats2.push({name: "movespeed", content: stats.movespeed, icon: statsiconlocation + "movespeed.png"});
+    $scope.currentchampion.displaystats2.push({name: "attackdamage", content: stats.attackdamage, icon: statsiconlocation + "attackdamage.png", base: stats.attackdamage, bonus: 0, bonusStat: "PhysicalDamage"});
+    $scope.currentchampion.displaystats2.push({name: "spelldamage", content: "0", icon: statsiconlocation + "spelldamage.png", bonus: 0, bonusStat: "MagicDamage"});
+    $scope.currentchampion.displaystats2.push({name: "armor", content: stats.armor, icon: statsiconlocation + "armor.png", base: stats.armor, bonus: 0});
+    $scope.currentchampion.displaystats2.push({name: "spellblock", content: stats.spellblock, icon: statsiconlocation + "spellblock.png", base: stats.spellblock, bonus: 0, bonusStat: "SepllBlock"});
+    $scope.currentchampion.displaystats2.push({name: "attackspeed", content: (0.625/(1+stats.attackspeedoffset)).toFixed(3), icon: statsiconlocation + "attackspeed.png", base: (0.625/(1+stats.attackspeedoffset)).toFixed(3), bonus: 0, bonusStat: "AttackSpeed"});
+    $scope.currentchampion.displaystats2.push({name: "cooldown", content: 0, icon: statsiconlocation + "cooldown.png", bonus: 0});
+    $scope.currentchampion.displaystats2.push({name: "crit", content: stats.crit, icon: statsiconlocation + "crit.png", bonus: 0, bonusStat: "CritChance"});
+    $scope.currentchampion.displaystats2.push({name: "movespeed", content: stats.movespeed, icon: statsiconlocation + "movespeed.png", base: stats.movespeed, bonus: 0, bonusStat: "MovementSpeed"});
   }
 });
 
