@@ -21,7 +21,7 @@ lolDmgApp.controller('ChampionStatusController', function($scope){
   $scope.currentchampion.displaystats2 = [{}, {}, {}, {}, {}, {}, {}, {}];
   $scope.currentchampion.items = [{}, {}, {}, {}, {}, {}];
   $scope.mouseoverStat = {};
-  $scope.currenitemstats = {};
+  $scope.currentitemstats = {};
 
   $scope.DisplayStatus = function() {
     console.log($scope.champions);
@@ -79,14 +79,10 @@ lolDmgApp.controller('ChampionCollectionController', function($scope, $filter, $
     }
     if (itemAdded === false)
       $scope.buyitemerror = "Items are full";
-    console.log($scope.currentchampion);
+    //console.log($scope.currentchampion);
 
-    // initialize item stats to empty array
-    console.log("initialize");
-    console.log($scope.currenitemstats);
-    $scope.currenitemstats = {};
-    console.log($scope.currenitemstats);
-    getCurrentItemStats($scope.currentchampion.items, $scope.currentchampion.displaystats1.concat($scope.currentchampion.displaystats2));
+    // update items stats (stats bonus)
+    getCurrentItemsStats($scope.currentchampion.items, $scope.currentchampion.displaystats1.concat($scope.currentchampion.displaystats2));
   };
 
   // select item from champion itemset.
@@ -110,11 +106,15 @@ lolDmgApp.controller('ChampionCollectionController', function($scope, $filter, $
     $scope.buildfromitemtree = {};
     $scope.currentchampion.items[item_index] = {};
     $scope.buyitemerror = "";
+
+    // update current items stats
+    getCurrentItemsStats($scope.currentchampion.items, $scope.currentchampion.displaystats1.concat($scope.currentchampion.displaystats2));
   };
 
   // get build-from-items tree for selected item
   // the output tree will looks like:
   // [[{item: item, colspan: colspan}],[],[]...]
+  // with td colspan attribute, it will format like a hierarchy tree in the view
   getBuildFromItems = function(item, items) {
     $scope.currentitem.buildFromItems = [];
     var itemStructure = [];
@@ -169,51 +169,101 @@ lolDmgApp.controller('ChampionCollectionController', function($scope, $filter, $
     return itemStructure;
   };
 
-  getCurrentItemStats = function(items, championstats) {
+  getCurrentItemsStats = function(items, championstats) {
 
-    console.log(championstats);
+    //console.log(championstats);
+    // initialize item stats to empty array
+    $scope.currentitemstats = {};
+    //console.log($scope.currentitemstats);
     var itemCapacity = 6;
     // loop through current items to get the stats array
     for(var i = 0; i < itemCapacity; i++) {
+      var hiddenitemstats = {};
       var itemstats = items[i].stats;
+
+      if(!angular.equals({}, items[i])) {
+        // find hidden stats
+        hiddenitemstats = parseItemDescription(items[i].sanitizedDescription);
+        console.log(hiddenitemstats);
+      }
+
+      // if hidden stats found, add to itemstats
+      if( !angular.equals({}, hiddenitemstats) ) {
+        angular.extend(itemstats, hiddenitemstats);
+        console.log(itemstats);
+      }
+
       if(itemstats) {
         // loop through each stats to update champion stats bonus
         angular.forEach(itemstats, function(value, key) {
-          var statName;
-          console.log(key + ":" + value);
+          var statName, championstat;
+          //console.log(key + ":" + value);
           // if stat contain "Flat", add the value to the stats bonus
           if(key.indexOf("Flat") !== -1) {
             // get the name of stat from key, key will have the format of Flat{statname}Mod
             statName = key.substring(key.indexOf("Flat") + ("Flat").length, key.length - 3);
-            if($scope.currenitemstats[statName])
-              $scope.currenitemstats[statName] += value;
+            championstat = $filter("filter")(championstats, {bonusStat: statName}, true)[0];
+            if($scope.currentitemstats[statName])
+              $scope.currentitemstats[statName] += value;
             else
-              $scope.currenitemstats[statName] = value;
+              $scope.currentitemstats[statName] = value;
           }
 
           if(key.indexOf("Percent") !== -1) {
             // get the name of stat from key, key will have the format of Percent{statname}Mod
             statName = key.substring(key.indexOf("Percent") + ("Percent").length, key.length - 3);
             // get champion stat using bonus statName
-            var championstat = $filter("filter")(championstats, {bonusStat: statName})[0];
-            console.log(championstat);
-            if($scope.currenitemstats[statName]) {
+            championstat = $filter("filter")(championstats, {bonusStat: statName}, true)[0];
+            if($scope.currentitemstats[statName]) {
               //console.log();
-              $scope.currenitemstats[statName] += championstat.base * value;
+              // if base is equal to 0, use 1 instead, apply for lifesteal, spell vamp
+              if(championstat.base === 0)
+                $scope.currentitemstats[statName] += 1 * value;
+              else
+                $scope.currentitemstats[statName] += championstat.base * value;
             }
             else {
-              console.log(championstat.base);
-              console.log(value);
-              console.log(championstat.base * value);
-              $scope.currenitemstats[statName] = championstat.base * value;
+              // if base is equal to 0, use 1 instead, apply for lifesteal, spell vamp
+              if(championstat.base === 0) {
+                $scope.currentitemstats[statName] = 1 * value;
+              }
+              else{
+                $scope.currentitemstats[statName] = championstat.base * value;
+              }
+            }
+          }
 
+
+          // update champion bonus stat and total stat (totalstat = base + bonus)
+          // attack speed will need growthAsBonus because attack speed grow is bonus(not base)
+          if(championstat) {
+            championstat.bonus = $scope.currentitemstats[statName].toFixed(3);
+            championstat.content = (parseFloat(championstat.base) + parseFloat(championstat.bonus) + (parseFloat(championstat.growthAsBonus || 0) )).toFixed(3);
+            if(championstat.max && championstat.content > championstat.max) {
+              championstat.content = championstat.max;
+              championstat.bonus = championstat.max;
             }
           }
         });
       }
+      console.log(items[i].sanitizedDescription);
     }
 
-    console.log($scope.currenitemstats);
+    console.log($scope.currentitemstats);
+  };
+
+  // Parse item description to item stats
+  parseItemDescription = function(itemDescription) {
+    description = itemDescription.split(' ').join('');
+    itemstats = {};
+    // get the value of life steal if exists
+    // ex: +20%LifeSteall
+    if(description.indexOf("LifeSteal") !== -1) {
+      value = parseFloat(description.substring(description.indexOf("LifeSteal")-3, description.indexOf("LifeSteal")-1))/100;
+      angular.extend(itemstats, {"FlatLifeStealMod": value});
+    }
+    console.log(itemstats);
+    return itemstats;
   };
 
 
@@ -246,32 +296,28 @@ lolDmgApp.controller('ChampionSelectedController', function($scope, ngDialog, Ri
   $scope.resetLevel = function() {
     if($scope.currentchampion.level) {
       $scope.currentchampion.level = 1;
-      updateStatsWithLevel($scope.currentchampion.displaystats1);
-      updateStatsWithLevel($scope.currentchampion.displaystats2);      
+      updateStatsWithLevel($scope.currentchampion.displaystats1.concat($scope.currentchampion.displaystats2));
     }
   };
 
   $scope.maxLevel = function() {
     if($scope.currentchampion.level) {
-     $scope.currentchampion.level = 18;
-      updateStatsWithLevel($scope.currentchampion.displaystats1);
-      updateStatsWithLevel($scope.currentchampion.displaystats2);     
+      $scope.currentchampion.level = 18;
+      updateStatsWithLevel($scope.currentchampion.displaystats1.concat($scope.currentchampion.displaystats2));
    }
   };
 
   $scope.upLevel = function() {
     if($scope.currentchampion.level < 18) {
       $scope.currentchampion.level += 1;
-      updateStatsWithLevel($scope.currentchampion.displaystats1);
-      updateStatsWithLevel($scope.currentchampion.displaystats2);
+      updateStatsWithLevel($scope.currentchampion.displaystats1.concat($scope.currentchampion.displaystats2));
     }
   };
 
   $scope.downLevel = function() {
     if($scope.currentchampion.level > 1) {
       $scope.currentchampion.level -= 1;
-      updateStatsWithLevel($scope.currentchampion.displaystats1);
-      updateStatsWithLevel($scope.currentchampion.displaystats2);      
+      updateStatsWithLevel($scope.currentchampion.displaystats1.concat($scope.currentchampion.displaystats2));
     }
   };
 
@@ -282,21 +328,26 @@ lolDmgApp.controller('ChampionSelectedController', function($scope, ngDialog, Ri
       statperlevel = stat + "perlevel";
      // console.log(statperlevel);      
       if($scope.champions[$scope.currentchampion.key].stats[statperlevel]){
+        level = $scope.currentchampion.level;
         if(statperlevel === 'attackspeedperlevel') {
           base = 0.625/(1+$scope.champions[$scope.currentchampion.key].stats["attackspeedoffset"]);
           growth = base * $scope.champions[$scope.currentchampion.key].stats[statperlevel]/100;
+          // the grow of attack speed only apply to bonus, not base
+          stats[i].growthAsBonus = (growth * (level - 1) * (0.685 + 0.0175 * level)).toFixed(3);
+          // attck speed stat will base on outside item bonus + inside level up bonus
+          stats[i].content = (parseFloat(base + parseFloat(stats[i].bonus)) +  parseFloat(stats[i].growthAsBonus)).toFixed(3);
         }
         else {
           base = $scope.champions[$scope.currentchampion.key].stats[stat];
           growth = $scope.champions[$scope.currentchampion.key].stats[statperlevel];
+          //calculate new stats base on formula  
+          //newStatistic = b + g * (n - 1) * (0.685 + 0.0175 * n)
+          //where b is base, g is growth, n is current level
+          stats[i].base = (base + growth * (level - 1) * (0.685 + 0.0175 * level)).toFixed(3);
+          stats[i].content = (parseFloat(stats[i].base) + parseFloat(stats[i].bonus)).toFixed(3);
         }
-      level = $scope.currentchampion.level;
-      //calculate new stats base on formula  
-      //newStatistic = b + g * (n - 1) * (0.685 + 0.0175 * n)
-      //where b is base, g is growth, n is current level
-      stats[i].base = (base + growth * (level - 1) * (0.685 + 0.0175 * level)).toFixed(3);
-     //   console.log(newstat);
-      stats[i].content = stats[i].base + stats[i].bonus;
+      
+      //console.log(stats[i]);
       }
     }
   };
@@ -358,19 +409,19 @@ lolDmgApp.controller('ChampionListController', function($scope) {
     $scope.currentchampion.displaystats1.push({name: "mpregen", content: stats.mpregen, icon: statsiconlocation + "mpregen.png", base: stats.mpregen, bonus: 0, bonusStat: "MPRegen"});
     $scope.currentchampion.displaystats1.push({name: "armorpen", content: "0 | 0%", icon: statsiconlocation + "armorpen.png", bonus: 0, bonusStat: "ArmorPenetration"});
     $scope.currentchampion.displaystats1.push({name: "magicpen", content: "0 | 0%", icon: statsiconlocation + "magicpen.png", bonus: 0, bonusStat: "MagicPenetration"});
-    $scope.currentchampion.displaystats1.push({name: "lifesteal", content: "0", icon: statsiconlocation + "lifesteal.png", bonus: 0, bonusStat: "LifeSteal"});
-    $scope.currentchampion.displaystats1.push({name: "spellsteal", content: "0", icon: statsiconlocation + "spellsteal.png", bonus: 0, bonusStat: "SepllVamp"});
+    $scope.currentchampion.displaystats1.push({name: "lifesteal", content: "0", icon: statsiconlocation + "lifesteal.png", base: 0, bonus: 0, bonusStat: "LifeSteal", max: 1});
+    $scope.currentchampion.displaystats1.push({name: "spellsteal", content: "0", icon: statsiconlocation + "spellsteal.png", base: 0, bonus: 0, bonusStat: "SepllVamp", max: 1});
     $scope.currentchampion.displaystats1.push({name: "attackrange", content: stats.attackrange, icon: statsiconlocation + "attackrange.png", base: stats.attackrange, bonus: 0});
     $scope.currentchampion.displaystats1.push({name: "tenacity", content: "0", icon: statsiconlocation + "tenacity.png", bonus: 0});
 
     $scope.currentchampion.displaystats2 = [];
     $scope.currentchampion.displaystats2.push({name: "attackdamage", content: stats.attackdamage, icon: statsiconlocation + "attackdamage.png", base: stats.attackdamage, bonus: 0, bonusStat: "PhysicalDamage"});
-    $scope.currentchampion.displaystats2.push({name: "spelldamage", content: "0", icon: statsiconlocation + "spelldamage.png", bonus: 0, bonusStat: "MagicDamage"});
-    $scope.currentchampion.displaystats2.push({name: "armor", content: stats.armor, icon: statsiconlocation + "armor.png", base: stats.armor, bonus: 0});
-    $scope.currentchampion.displaystats2.push({name: "spellblock", content: stats.spellblock, icon: statsiconlocation + "spellblock.png", base: stats.spellblock, bonus: 0, bonusStat: "SepllBlock"});
-    $scope.currentchampion.displaystats2.push({name: "attackspeed", content: (0.625/(1+stats.attackspeedoffset)).toFixed(3), icon: statsiconlocation + "attackspeed.png", base: (0.625/(1+stats.attackspeedoffset)).toFixed(3), bonus: 0, bonusStat: "AttackSpeed"});
+    $scope.currentchampion.displaystats2.push({name: "spelldamage", content: "0", icon: statsiconlocation + "spelldamage.png", base: 0, bonus: 0, bonusStat: "MagicDamage"});
+    $scope.currentchampion.displaystats2.push({name: "armor", content: stats.armor, icon: statsiconlocation + "armor.png", base: stats.armor, bonus: 0, bonusStat: "Armor"});
+    $scope.currentchampion.displaystats2.push({name: "spellblock", content: stats.spellblock, icon: statsiconlocation + "spellblock.png", base: stats.spellblock, bonus: 0, bonusStat: "SpellBlock"});
+    $scope.currentchampion.displaystats2.push({name: "attackspeed", content: (0.625/(1+stats.attackspeedoffset)).toFixed(3), icon: statsiconlocation + "attackspeed.png", base: (0.625/(1+stats.attackspeedoffset)).toFixed(3), bonus: 0, bonusStat: "AttackSpeed", growthAsBonus: 0, max: 2.5});
     $scope.currentchampion.displaystats2.push({name: "cooldown", content: 0, icon: statsiconlocation + "cooldown.png", bonus: 0});
-    $scope.currentchampion.displaystats2.push({name: "crit", content: stats.crit, icon: statsiconlocation + "crit.png", bonus: 0, bonusStat: "CritChance"});
+    $scope.currentchampion.displaystats2.push({name: "crit", content: stats.crit, icon: statsiconlocation + "crit.png", base: 0, bonus: 0, bonusStat: "CritChance", max: 1});
     $scope.currentchampion.displaystats2.push({name: "movespeed", content: stats.movespeed, icon: statsiconlocation + "movespeed.png", base: stats.movespeed, bonus: 0, bonusStat: "MovementSpeed"});
   }
 });
